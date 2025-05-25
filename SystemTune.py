@@ -155,8 +155,7 @@ def confirm_and_execute(suggestions):
             except Exception as e:
                 print(f"❌ \033[91mFirmware installation failed: {e}\033[0m")
         else:
-            print("⚠️  \033[91mIssue not implemented for auto-fi
-            x. Please apply manually.\033[0m")
+            print("⚠️  \033[91mIssue not implemented for auto-fix. Please apply manually.\033[0m")
     else:
         print(">> \033[90mSkipping execution.\033[0m")
 
