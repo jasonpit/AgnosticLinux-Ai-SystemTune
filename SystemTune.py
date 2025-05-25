@@ -44,16 +44,36 @@ def run_cmd(cmd):
     except subprocess.CalledProcessError as e:
         return f"Error running command '{cmd}': {e.stderr.strip()}"
 
-# Collect hardware and software diagnostics
+# Collect hardware and software diagnostics (enhanced version)
 def collect_system_info():
     info = {}
     info['CPU Info'] = run_cmd("lscpu")
     info['Memory Info'] = run_cmd("free -h")
     info['Disk Info'] = run_cmd("lsblk")
     info['PCI Devices'] = run_cmd("lspci")
-    info['USB Devices'] = run_cmd("lsusb")
+
+    # USB device check with fallback
+    import shutil
+    if shutil.which("lsusb"):
+        info['USB Devices'] = run_cmd("lsusb")
+    else:
+        info['USB Devices'] = "lsusb not found. Install usbutils to view USB devices."
+
     info['Kernel Version'] = run_cmd("uname -a")
     info['Distro Info'] = run_cmd("cat /etc/*release")
+
+    # Manufacturer / model info using dmidecode
+    if shutil.which("dmidecode"):
+        info['DMI Decode Info'] = run_cmd("sudo dmidecode -t system")
+    else:
+        info['DMI Decode Info'] = "dmidecode not available. Run as root and install dmidecode for hardware manufacturer info."
+
+    # Full system snapshot via inxi
+    if shutil.which("inxi"):
+        info['Inxi Full'] = run_cmd("inxi -Fazy")
+    else:
+        info['Inxi Full'] = "inxi not available. Install with `sudo pacman -Sy inxi` or `sudo apt install inxi`."
+
     return info
 
 # Collect recent system logs
@@ -135,7 +155,8 @@ def confirm_and_execute(suggestions):
             except Exception as e:
                 print(f"❌ \033[91mFirmware installation failed: {e}\033[0m")
         else:
-            print("⚠️  \033[91mIssue not implemented for auto-fix. Please apply manually.\033[0m")
+            print("⚠️  \033[91mIssue not implemented for auto-fi
+            x. Please apply manually.\033[0m")
     else:
         print(">> \033[90mSkipping execution.\033[0m")
 
