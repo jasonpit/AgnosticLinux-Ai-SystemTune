@@ -52,7 +52,6 @@ def collect_system_info():
     info['Disk Info'] = run_cmd("lsblk")
     info['PCI Devices'] = run_cmd("lspci")
 
-    # USB device check with fallback
     import shutil
     if shutil.which("lsusb"):
         info['USB Devices'] = run_cmd("lsusb")
@@ -62,13 +61,17 @@ def collect_system_info():
     info['Kernel Version'] = run_cmd("uname -a")
     info['Distro Info'] = run_cmd("cat /etc/*release")
 
-    # Manufacturer / model info using dmidecode
+    # Add precise system model info
+    sys_vendor = run_cmd("cat /sys/devices/virtual/dmi/id/sys_vendor")
+    product_name = run_cmd("cat /sys/devices/virtual/dmi/id/product_name")
+    product_version = run_cmd("cat /sys/devices/virtual/dmi/id/product_version")
+    info['System Model'] = f"{sys_vendor} {product_name} ({product_version})"
+
     if shutil.which("dmidecode"):
         info['DMI Decode Info'] = run_cmd("sudo dmidecode -t system")
     else:
         info['DMI Decode Info'] = "dmidecode not available. Run as root and install dmidecode for hardware manufacturer info."
 
-    # Full system snapshot via inxi
     if shutil.which("inxi"):
         info['Inxi Full'] = run_cmd("inxi -Fazy")
     else:
@@ -82,8 +85,11 @@ def collect_logs():
 
 # Query OpenAI for optimization suggestions
 def get_ai_suggestions(system_info, logs):
+    system_model = system_info.get('System Model', 'Unknown system')
     prompt = f"""
-You are a Linux performance tuning assistant. Given the following system details and logs, suggest optimizations:
+You are a Linux performance tuning assistant. The system is running on a {system_model}.
+
+Use the following system details and logs to suggest optimizations and identify potential hardware-specific issues:
 
 System Info:
 {json.dumps(system_info, indent=2)}
@@ -163,6 +169,15 @@ def confirm_and_execute(suggestions):
 def main():
     print("[*] Gathering system diagnostics...")
     sys_info = collect_system_info()
+
+    print("\033[95m\n=== System Summary ===\033[0m")
+    import shutil
+    if shutil.which("neofetch"):
+        os.system("neofetch --off")
+    else:
+        print(run_cmd("hostnamectl"))
+        print(run_cmd("uname -r"))
+        print(run_cmd("lscpu | grep 'Model name'"))
 
     print("[*] Collecting logs...")
     logs = collect_logs()
