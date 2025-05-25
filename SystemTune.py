@@ -1,5 +1,3 @@
-
-
 #!/usr/bin/env python3
 
 """
@@ -115,6 +113,27 @@ def confirm_and_execute(suggestions):
                 print("✅ \033[92mSwap enabled and added to /etc/fstab.\033[0m")
             except Exception as e:
                 print(f"❌ \033[91mFailed to create swapfile: {e}\033[0m")
+        elif issue_number == '2':
+            print("🛠️  \033[93mAttempting to detect network chipset and install missing firmware...\033[0m")
+            try:
+                chipset_output = run_cmd("lspci -knn | grep -A3 -i net")
+                print(f"\033[96mDetected Network Chipset:\033[0m\n{chipset_output}")
+
+                # Try to determine distro and install firmware
+                distro_info = run_cmd("cat /etc/os-release")
+                if "Arch" in distro_info:
+                    print("🔧 \033[93mDetected Arch-based system. Installing linux-firmware...\033[0m")
+                    run_cmd("sudo pacman -Sy --noconfirm linux-firmware")
+                elif "Debian" in distro_info or "Ubuntu" in distro_info:
+                    print("🔧 \033[93mDetected Debian-based system. Installing firmware-linux...\033[0m")
+                    run_cmd("sudo apt update && sudo apt install -y firmware-linux firmware-linux-nonfree")
+                elif "Fedora" in distro_info:
+                    print("🔧 \033[93mDetected Fedora-based system. Installing linux-firmware...\033[0m")
+                    run_cmd("sudo dnf install -y linux-firmware")
+                else:
+                    print("⚠️  \033[91mUnsupported or unknown distribution. Please install firmware manually.\033[0m")
+            except Exception as e:
+                print(f"❌ \033[91mFirmware installation failed: {e}\033[0m")
         else:
             print("⚠️  \033[91mIssue not implemented for auto-fix. Please apply manually.\033[0m")
     else:
