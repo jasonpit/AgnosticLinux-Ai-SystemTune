@@ -21,7 +21,8 @@ Requires:
 #### Usage:
 python -m venv .venv
 source .venv/bin/activate
-pip install openai python-dotenv
+pip install openai==0.28
+pip install python-dotenv
 
 OPENAI_API_KEY=sk-... python SystemTune.py
 """
