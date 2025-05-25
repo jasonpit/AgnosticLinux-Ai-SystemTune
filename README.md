@@ -67,7 +67,10 @@ If the environment variable is not found, the script will prompt you securely fo
 - Run from a terminal or over SSH
 - You may need `sudo` for full diagnostics (e.g., `journalctl`)
 - Use in a Python virtual environment to avoid conflicts:
-  ```bash
+  ```bash  
+  mkdir -p SystemTune 
+  cd SystemTune/
+  curl -O https://raw.githubusercontent.com/jasonpit/AgnosticLinux-Ai-SystemTune/main/SystemTune.py
   python -m venv .venv
   source .venv/bin/activate
   ```
