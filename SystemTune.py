@@ -17,6 +17,13 @@ Requires:
 - Python 3.7+
 - OpenAI Python SDK (`pip install openai`)
 - Root access for some operations
+
+#### Usage:
+python -m venv .venv
+source .venv/bin/activate
+pip install openai python-dotenv
+
+OPENAI_API_KEY=sk-... python SystemTune.py
 """
 
 import os
