@@ -113,57 +113,68 @@ import shutil
 def confirm_and_execute(suggestions):
     print("\n\033[96m===== AI Suggestions =====\033[0m")
     print(suggestions)
-    print("\n\033[93mDo you want to apply any of the above suggestions manually or automatically? (manual/auto/skip/select): \033[0m", end="")
-    choice = input().strip().lower()
 
-    if choice == 'auto':
-        print(">> \033[91mAutomation logic not implemented. You should manually review suggestions.\033[0m")
-    elif choice == 'manual':
-        print(">> \033[92mPlease apply the suggestions manually.\033[0m")
-    elif choice == 'select':
-        print("\033[94mWhich issue number would you like to address?: \033[0m", end="")
-        issue_number = input().strip()
-        if issue_number == '1':
-            print("🛠️  \033[93mCreating a 4GB swapfile...\033[0m")
-            try:
-                if not shutil.which("swapon"):
-                    print("❌ \033[91mSwap utilities not found on system.\033[0m")
-                    return
+    while True:
+        print("\n\033[93mDo you want to apply any of the above suggestions manually or automatically? (manual/auto/skip/select): \033[0m", end="")
+        choice = input().strip().lower()
 
-                run_cmd("sudo fallocate -l 4G /swapfile")
-                run_cmd("sudo chmod 600 /swapfile")
-                run_cmd("sudo mkswap /swapfile")
-                run_cmd("sudo swapon /swapfile")
-                with open("/etc/fstab", "a") as fstab:
-                    fstab.write("\n/swapfile none swap sw 0 0\n")
-                print("✅ \033[92mSwap enabled and added to /etc/fstab.\033[0m")
-            except Exception as e:
-                print(f"❌ \033[91mFailed to create swapfile: {e}\033[0m")
-        elif issue_number == '2':
-            print("🛠️  \033[93mAttempting to detect network chipset and install missing firmware...\033[0m")
-            try:
-                chipset_output = run_cmd("lspci -knn | grep -A3 -i net")
-                print(f"\033[96mDetected Network Chipset:\033[0m\n{chipset_output}")
+        if choice == 'auto':
+            print(">> \033[91mAutomation logic not implemented. You should manually review suggestions.\033[0m")
+            break
+        elif choice == 'manual':
+            print(">> \033[92mPlease apply the suggestions manually.\033[0m")
+            break
+        elif choice == 'select':
+            while True:
+                print("\033[94mWhich issue number would you like to address?: \033[0m", end="")
+                issue_number = input().strip()
+                if issue_number == '1':
+                    print("🛠️  \033[93mCreating a 4GB swapfile...\033[0m")
+                    try:
+                        if not shutil.which("swapon"):
+                            print("❌ \033[91mSwap utilities not found on system.\033[0m")
+                            return
 
-                # Try to determine distro and install firmware
-                distro_info = run_cmd("cat /etc/os-release")
-                if "Arch" in distro_info:
-                    print("🔧 \033[93mDetected Arch-based system. Installing linux-firmware...\033[0m")
-                    run_cmd("sudo pacman -Sy --noconfirm linux-firmware")
-                elif "Debian" in distro_info or "Ubuntu" in distro_info:
-                    print("🔧 \033[93mDetected Debian-based system. Installing firmware-linux...\033[0m")
-                    run_cmd("sudo apt update && sudo apt install -y firmware-linux firmware-linux-nonfree")
-                elif "Fedora" in distro_info:
-                    print("🔧 \033[93mDetected Fedora-based system. Installing linux-firmware...\033[0m")
-                    run_cmd("sudo dnf install -y linux-firmware")
+                        run_cmd("sudo fallocate -l 4G /swapfile")
+                        run_cmd("sudo chmod 600 /swapfile")
+                        run_cmd("sudo mkswap /swapfile")
+                        run_cmd("sudo swapon /swapfile")
+                        with open("/etc/fstab", "a") as fstab:
+                            fstab.write("\n/swapfile none swap sw 0 0\n")
+                        print("✅ \033[92mSwap enabled and added to /etc/fstab.\033[0m")
+                    except Exception as e:
+                        print(f"❌ \033[91mFailed to create swapfile: {e}\033[0m")
+                elif issue_number == '2':
+                    print("🛠️  \033[93mAttempting to detect network chipset and install missing firmware...\033[0m")
+                    try:
+                        chipset_output = run_cmd("lspci -knn | grep -A3 -i net")
+                        print(f"\033[96mDetected Network Chipset:\033[0m\n{chipset_output}")
+
+                        # Try to determine distro and install firmware
+                        distro_info = run_cmd("cat /etc/os-release")
+                        if "Arch" in distro_info:
+                            print("🔧 \033[93mDetected Arch-based system. Installing linux-firmware...\033[0m")
+                            run_cmd("sudo pacman -Sy --noconfirm linux-firmware")
+                        elif "Debian" in distro_info or "Ubuntu" in distro_info:
+                            print("🔧 \033[93mDetected Debian-based system. Installing firmware-linux...\033[0m")
+                            run_cmd("sudo apt update && sudo apt install -y firmware-linux firmware-linux-nonfree")
+                        elif "Fedora" in distro_info:
+                            print("🔧 \033[93mDetected Fedora-based system. Installing linux-firmware...\033[0m")
+                            run_cmd("sudo dnf install -y linux-firmware")
+                        else:
+                            print("⚠️  \033[91mUnsupported or unknown distribution. Please install firmware manually.\033[0m")
+                    except Exception as e:
+                        print(f"❌ \033[91mFirmware installation failed: {e}\033[0m")
                 else:
-                    print("⚠️  \033[91mUnsupported or unknown distribution. Please install firmware manually.\033[0m")
-            except Exception as e:
-                print(f"❌ \033[91mFirmware installation failed: {e}\033[0m")
+                    print("⚠️  \033[91mIssue not implemented for auto-fix. Please apply manually.\033[0m")
+
+                print("\n\033[93mWould you like to address another issue? (yes/no): \033[0m", end="")
+                again = input().strip().lower()
+                if again != "yes":
+                    return
         else:
-            print("⚠️  \033[91mIssue not implemented for auto-fix. Please apply manually.\033[0m")
-    else:
-        print(">> \033[90mSkipping execution.\033[0m")
+            print(">> \033[90mSkipping execution.\033[0m")
+            break
 
 # Main function
 def main():
