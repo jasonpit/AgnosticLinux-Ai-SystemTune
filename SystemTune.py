@@ -66,6 +66,7 @@ def collect_system_info():
     product_name = run_cmd("cat /sys/devices/virtual/dmi/id/product_name")
     product_version = run_cmd("cat /sys/devices/virtual/dmi/id/product_version")
     info['System Model'] = f"{sys_vendor} {product_name} ({product_version})"
+    info['Is Apple Mac'] = 'Apple' in sys_vendor or 'Mac' in product_name
 
     if shutil.which("dmidecode"):
         info['DMI Decode Info'] = run_cmd("sudo dmidecode -t system")
@@ -86,13 +87,30 @@ def collect_logs():
 # Query OpenAI for optimization suggestions
 def get_ai_suggestions(system_info, logs):
     system_model = system_info.get('System Model', 'Unknown system')
+    mac_hint = ""
+    if system_info.get('Is Apple Mac'):
+        mac_hint = (
+            "\nNOTE: This system is Apple Mac hardware. It may require Broadcom Wi-Fi support (broadcom-wl), "
+            "the hid_apple kernel module for keyboard mappings, and macfanctld for fan control. "
+            "Apple-specific drivers and EFI nuances should be considered.\n"
+        )
+
+    # Truncate logs to last 100 lines
+    logs = "\n".join(logs.splitlines()[-100:])
+
+    # Trim large system info values
+    trimmed_info = {
+        k: (v if isinstance(v, str) and len(v) < 1000 else (v[:1000] + "\n...[truncated]") if isinstance(v, str) else v)
+        for k, v in system_info.items()
+    }
+
     prompt = f"""
 You are a Linux performance tuning assistant. The system is running on a {system_model}.
-
+{mac_hint}
 Use the following system details and logs to suggest optimizations and identify potential hardware-specific issues:
 
 System Info:
-{json.dumps(system_info, indent=2)}
+{json.dumps(trimmed_info, indent=2)}
 
 System Logs:
 {logs}
@@ -125,6 +143,7 @@ def confirm_and_execute(suggestions):
             print(">> \033[92mPlease apply the suggestions manually.\033[0m")
             break
         elif choice == 'select':
+            print("\n\033[94mAvailable issue numbers:\033[0m\n1 = Add swapfile\n2 = Install network firmware\n3 = Apply Mac hardware fixes")
             while True:
                 print("\033[94mWhich issue number would you like to address?: \033[0m", end="")
                 issue_number = input().strip()
@@ -165,6 +184,15 @@ def confirm_and_execute(suggestions):
                             print("⚠️  \033[91mUnsupported or unknown distribution. Please install firmware manually.\033[0m")
                     except Exception as e:
                         print(f"❌ \033[91mFirmware installation failed: {e}\033[0m")
+                elif issue_number == '3':
+                    print("🛠️  \033[93mApplying Apple-specific hardware optimizations...\033[0m")
+                    try:
+                        run_cmd("sudo pacman -Sy --noconfirm broadcom-wl-dkms linux-headers")
+                        run_cmd("echo 'options hid_apple fnmode=2' | sudo tee /etc/modprobe.d/hid_apple.conf")
+                        run_cmd("yay -S --noconfirm macfanctld")
+                        print("✅ \033[92mMac-specific packages installed.\033[0m")
+                    except Exception as e:
+                        print(f"❌ \033[91mFailed to apply Mac-specific fixes: {e}\033[0m")
                 else:
                     print("⚠️  \033[91mIssue not implemented for auto-fix. Please apply manually.\033[0m")
 
