@@ -161,13 +161,16 @@ def confirm_and_execute(suggestions):
                             print("❌ \033[91mSwap utilities not found on system.\033[0m")
                             return
 
-                        run_cmd("sudo fallocate -l 4G /swapfile")
-                        run_cmd("sudo chmod 600 /swapfile")
-                        run_cmd("sudo mkswap /swapfile")
-                        run_cmd("sudo swapon /swapfile")
-                        with open("/etc/fstab", "a") as fstab:
-                            fstab.write("\n/swapfile none swap sw 0 0\n")
-                        print("✅ \033[92mSwap enabled and added to /etc/fstab.\033[0m")
+                        existing_swap = run_cmd("swapon --show | grep /swapfile")
+                        if existing_swap:
+                            print("✅ \033[92mSwapfile already exists and is active.\033[0m")
+                        else:
+                            run_cmd("sudo fallocate -l 4G /swapfile")
+                            run_cmd("sudo chmod 600 /swapfile")
+                            run_cmd("sudo mkswap /swapfile")
+                            run_cmd("sudo swapon /swapfile")
+                            run_cmd("echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab")
+                            print("✅ \033[92mSwapfile created, enabled, and added to /etc/fstab.\033[0m")
                     except Exception as e:
                         print(f"❌ \033[91mFailed to create swapfile: {e}\033[0m")
                 elif issue_number == '2':
