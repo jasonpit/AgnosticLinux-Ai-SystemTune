@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+
+
+
 """
 SystemTune.py
 -------------
@@ -99,26 +102,30 @@ def get_ai_suggestions(system_info, logs):
     logs = "\n".join(logs.splitlines()[-100:])
 
     # Trim large system info values
-    trimmed_info = {
-        k: (v if isinstance(v, str) and len(v) < 1000 else (v[:1000] + "\n...[truncated]") if isinstance(v, str) else v)
-        for k, v in system_info.items()
-    }
+    trimmed_info = {}
+    for i, (k, v) in enumerate(system_info.items()):
+        if i > 8:  # Limit to first 9 items
+            break
+        if isinstance(v, str) and len(v) > 500:
+            trimmed_info[k] = v[:500] + "\n...[truncated]"
+        else:
+            trimmed_info[k] = v
 
     prompt = f"""
 You are a Linux performance tuning assistant. The system is running on a {system_model}.
 {mac_hint}
-Use the following system details and logs to suggest optimizations and identify potential hardware-specific issues:
+Use the following partial system details and recent logs to suggest optimizations and flag any unstable hardware-specific issues.
 
-System Info:
-{json.dumps(trimmed_info, indent=2)}
+System Info (trimmed):
+{json.dumps(trimmed_info, indent=2)[:1500]}  # Safely limit string length
 
-System Logs:
-{logs}
+Logs (last 100 lines only):
+{logs[:2500]}  # Cap log length
 
-Return concise, actionable suggestions. If anything looks critical or unstable, flag it clearly.
+Keep suggestions concise and actionable.
 """
     response = openai.ChatCompletion.create(
-        model="gpt-4",
+        model="gpt-3.5-turbo-0125",
         messages=[{"role": "user", "content": prompt}],
         max_tokens=800
     )
