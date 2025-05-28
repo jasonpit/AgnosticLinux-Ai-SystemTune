@@ -155,16 +155,17 @@ def confirm_and_execute(suggestions):
                 print("\033[94mWhich issue number would you like to address?: \033[0m", end="")
                 issue_number = input().strip()
                 if issue_number == '1':
-                    print("🛠️  \033[93mCreating a 4GB swapfile...\033[0m")
+                    print("🛠️  \033[93mChecking for existing swapfile...\033[0m")
                     try:
-                        if not shutil.which("swapon"):
-                            print("❌ \033[91mSwap utilities not found on system.\033[0m")
-                            return
-
                         existing_swap = run_cmd("swapon --show | grep /swapfile")
                         if existing_swap:
                             print("✅ \033[92mSwapfile already exists and is active.\033[0m")
                         else:
+                            print("🛠️  \033[93mCreating a 4GB swapfile...\033[0m")
+                            if not shutil.which("swapon"):
+                                print("❌ \033[91mSwap utilities not found on system.\033[0m")
+                                return
+
                             run_cmd("sudo fallocate -l 4G /swapfile")
                             run_cmd("sudo chmod 600 /swapfile")
                             run_cmd("sudo mkswap /swapfile")
@@ -172,7 +173,7 @@ def confirm_and_execute(suggestions):
                             run_cmd("echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab")
                             print("✅ \033[92mSwapfile created, enabled, and added to /etc/fstab.\033[0m")
                     except Exception as e:
-                        print(f"❌ \033[91mFailed to create swapfile: {e}\033[0m")
+                        print(f"❌ \033[91mFailed to check or create swapfile: {e}\033[0m")
                 elif issue_number == '2':
                     print("🛠️  \033[93mAttempting to detect network chipset and install missing firmware...\033[0m")
                     try:
