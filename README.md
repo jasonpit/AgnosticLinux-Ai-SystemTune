@@ -40,40 +40,54 @@ pip install openai python-dotenv
 ## 🚀 Quick Start
 
 Clone the repo:
-
 ```bash
 git clone https://github.com/jasonpit/AgnosticLinux-Ai-SystemTune.git
-cd AgnosticLinux-AgnosticLinux-Ai-SystemTune
+cd AgnosticLinux-Ai-SystemTune
 ```
 
 Create a `.env` file with your OpenAI key:
-
 ```env
 OPENAI_API_KEY=your-api-key-here
 ```
 
 Run the tool:
-
 ```bash
 python SystemTune.py
 ```
 
-If the environment variable is not found, the script will prompt you securely for the API key.
+You’ll be guided through:
+- System summary generation
+- Log analysis (from journalctl and dmesg)
+- AI-assisted diagnostics via OpenAI API
+- Selection-based optimization options
 
 ---
 
 ## 🌐 Usage Notes
 
-- Run from a terminal or over SSH
-- You may need `sudo` for full diagnostics (e.g., `journalctl`)
-- Use in a Python virtual environment to avoid conflicts:
-  ```bash  
-  mkdir -p SystemTune 
-  cd SystemTune/
-  curl -O https://raw.githubusercontent.com/jasonpit/AgnosticLinux-Ai-SystemTune/main/SystemTune.py
-  python -m venv .venv
-  source .venv/bin/activate
-  ```
+- Requires `sudo` for full diagnostic access (journal logs, hardware probing, swapfile creation)
+- Interactive CLI prompts will walk you through available issues and proposed fixes
+- Works best in a Python virtual environment
+- Your API key can be provided through `.env`, environment variable, or prompted input
+
+---
+
+## 🧪 What Happens When You Run It
+
+When executed, `SystemTune.py` performs the following steps:
+1. **System Summary**: Displays OS, kernel, model, firmware, and CPU info.
+2. **Log Collection**: Pulls data from `journalctl`, `dmesg`, and hardware lister tools.
+3. **AI Querying**: Sends anonymized hardware and log info to OpenAI’s GPT model to analyze issues and suggest optimizations.
+4. **Interactive Resolution**:
+   - You’re prompted to pick an issue to fix
+   - Common fixes include: adding swap, fixing Broadcom drivers, or tuning Mac-specific packages (like `macfanctld`)
+   - If an issue can’t be fixed automatically (e.g., permission denied on `/etc/fstab`), you’ll be notified
+
+All actions are logged and suggestions are presented with actionable insight.
+
+---
+
+Let me know if you want to export results to a file or add screenshot/GIF support for GitHub viewers.
 
 ---
 

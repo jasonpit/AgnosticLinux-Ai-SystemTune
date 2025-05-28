@@ -214,7 +214,9 @@ def confirm_and_execute(suggestions):
 # Main function
 def main():
     print("[*] Gathering system diagnostics...")
+    print("📊 Collecting system metrics including CPU, memory, disk, kernel, USB, PCI, and system model...")
     sys_info = collect_system_info()
+    print("✅ System metrics collected. Detected model:", sys_info.get('System Model', 'Unknown'))
 
     print("\033[95m\n=== System Summary ===\033[0m")
     import shutil
@@ -225,11 +227,15 @@ def main():
         print(run_cmd("uname -r"))
         print(run_cmd("lscpu | grep 'Model name'"))
 
+    print("🗒️ Fetching recent critical system logs...")
     print("[*] Collecting logs...")
     logs = collect_logs()
+    print("✅ Logs collected. Last 100 critical entries will be analyzed.")
 
+    print("🤖 Sending diagnostics to AI for optimization suggestions...")
     print("[*] Querying AI for suggestions...")
     suggestions = get_ai_suggestions(sys_info, logs)
+    print("✅ AI response received. Displaying suggestions...")
 
     confirm_and_execute(suggestions)
 
